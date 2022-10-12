@@ -2,20 +2,18 @@ package br.com.aulaws.sysgestao.resource;
 
 import java.net.URI;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.aulaws.sysgestao.domain.Cliente;
@@ -34,12 +32,22 @@ public class ClienteResource {
     private ClienteService clienteService;
 
     @GetMapping
-    public ResponseEntity<List<Cliente>> obterTodosClientes() {
+    public ResponseEntity<CollectionModel<Cliente>> obterTodosClientes() {
         List<Cliente> clientes = clienteService.findAll();
         if (clientes.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(clientes);
+
+        for (Cliente cliente : clientes) {
+            cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel());
+            cliente.add(
+                    linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withRel(IanaLinkRelations.COLLECTION));
+        }
+
+        CollectionModel<Cliente> collectionModel = CollectionModel.of(clientes);
+        collectionModel.add(linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withSelfRel());
+
+        return ResponseEntity.ok(collectionModel);
     }
 
     @GetMapping("/{id}")
@@ -47,8 +55,8 @@ public class ClienteResource {
         Cliente cliente;
         cliente = clienteService.findById(id);
 
-        cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId
-        (cliente.getId())).withSelfRel());
+        cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel());
+        cliente.add(linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withRel(IanaLinkRelations.COLLECTION));
 
         return ResponseEntity.ok(cliente);
     }
@@ -67,16 +75,19 @@ public class ClienteResource {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarClientePorId(@PathVariable("id") Long id) {
         clienteService.deletePorId(id);
-        return ResponseEntity.noContent().build();      
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping
-    public ResponseEntity<Void> saveCliente(@RequestBody @Valid Cliente cliente, HttpServletRequest request) {
+    public ResponseEntity<Cliente> saveCliente(@RequestBody @Valid Cliente cliente, HttpServletRequest request) {
 
         clienteService.save(cliente);
-        String path = request.getRequestURI()+"/"+cliente.getId();
-        
-        return ResponseEntity.created(URI.create(path)).build();
+
+        URI uri = linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel().toUri();
+        cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel());
+        cliente.add(linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withRel(IanaLinkRelations.COLLECTION));
+
+        return ResponseEntity.created(uri).body(cliente);
     }
 
 }
