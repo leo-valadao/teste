@@ -47,7 +47,8 @@ public class ClienteResource {
         Cliente cliente;
         cliente = clienteService.findById(id);
 
-        cliente.add();
+        cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId
+        (cliente.getId())).withSelfRel());
 
         return ResponseEntity.ok(cliente);
     }
