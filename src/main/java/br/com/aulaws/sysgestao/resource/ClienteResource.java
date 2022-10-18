@@ -9,6 +9,7 @@ import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.aulaws.sysgestao.domain.Cliente;
+import br.com.aulaws.sysgestao.domain.Endereco;
 import br.com.aulaws.sysgestao.service.ClienteService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -69,6 +71,10 @@ public class ClienteResource {
     public ResponseEntity<Cliente> atualizarCliente(@RequestBody Cliente cliente) {
         clienteService.findById(cliente.getId());
         clienteService.update(cliente);
+
+        cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel());
+        cliente.add(linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withRel(IanaLinkRelations.COLLECTION));
+
         return ResponseEntity.ok(cliente);
     }
 
@@ -90,4 +96,8 @@ public class ClienteResource {
         return ResponseEntity.created(uri).body(cliente);
     }
 
+    @PatchMapping
+    public void atualizarEnderecoDoCliente(Long idCliente, Endereco endereco) {
+        clienteService.updatePartial(idCliente, endereco);
+    }
 }

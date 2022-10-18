@@ -6,14 +6,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.com.aulaws.sysgestao.domain.Cliente;
+import br.com.aulaws.sysgestao.domain.Endereco;
 import br.com.aulaws.sysgestao.error.NotFoundException;
 import br.com.aulaws.sysgestao.repository.ClienteRepository;
+import br.com.aulaws.sysgestao.repository.EnderecoRepository;
 
 @Service
 public class ClienteService {
     
     @Autowired
     private ClienteRepository clienteRepository;
+
+    @Autowired
+    private EnderecoRepository enderecoRepository;
+
+    @Autowired
+    private EnderecoService enderecoService;
 
     public List<Cliente> findAll() {
         return clienteRepository.findAll();
@@ -41,6 +49,25 @@ public class ClienteService {
         }
 
         clienteRepository.deleteById(id);
+    }
+
+    public void updatePartial(Long id, Endereco endereco) {
+        if(!clienteRepository.existsById(id)){
+            throw new NotFoundException("Cliente não encontrado. id="+id);
+        }
+
+        Cliente cliente = clienteRepository.findById(id).get();
+
+        if(cliente.getEndereco() == null){
+            cliente.setEndereco(endereco);
+            this.save(cliente);
+        } else {
+            Endereco enderecoAtual = cliente.getEndereco();
+            cliente.setEndereco(endereco);
+            this.save(cliente);
+
+            this.enderecoService.deleteById(enderecoAtual);
+        }
     }
 
 
