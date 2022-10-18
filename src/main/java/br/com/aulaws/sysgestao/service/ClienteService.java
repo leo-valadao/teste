@@ -51,23 +51,22 @@ public class ClienteService {
         clienteRepository.deleteById(id);
     }
 
-    public void updatePartial(Long id, Endereco endereco) {
+    public Cliente updatePartial(Long id, Endereco endereco) {
         if(!clienteRepository.existsById(id)){
             throw new NotFoundException("Cliente não encontrado. id="+id);
         }
 
         Cliente cliente = clienteRepository.findById(id).get();
 
-        if(cliente.getEndereco() == null){
-            cliente.setEndereco(endereco);
-            this.save(cliente);
-        } else {
-            Endereco enderecoAtual = cliente.getEndereco();
-            cliente.setEndereco(endereco);
-            this.save(cliente);
+        Endereco enderecoAtual = cliente.getEndereco();
+        cliente.setEndereco(endereco);
+        this.save(cliente);
 
+        if (enderecoAtual != null) {
             this.enderecoService.deleteById(enderecoAtual);
         }
+
+        return cliente;
     }
 
 

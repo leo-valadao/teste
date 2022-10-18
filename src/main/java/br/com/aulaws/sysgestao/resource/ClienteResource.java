@@ -91,13 +91,15 @@ public class ClienteResource {
 
         URI uri = linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel().toUri();
         cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel());
+        cliente.add(linkTo(methodOn(ClienteResource.class).atualizarEnderecoDoCliente(cliente.getId(),null)).withRel("endereço"));
         cliente.add(linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withRel(IanaLinkRelations.COLLECTION));
 
         return ResponseEntity.created(uri).body(cliente);
     }
 
-    @PatchMapping
-    public void atualizarEnderecoDoCliente(Long idCliente, Endereco endereco) {
+    @PatchMapping("/{id}/endereco")
+    public ResponseEntity<Cliente> atualizarEnderecoDoCliente(@PathVariable("id") Long idCliente, Endereco endereco) {
         clienteService.updatePartial(idCliente, endereco);
+        return ResponseEntity.ok(clienteService.updatePartial(idCliente, endereco));
     }
 }
