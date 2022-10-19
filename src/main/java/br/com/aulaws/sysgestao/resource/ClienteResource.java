@@ -42,8 +42,8 @@ public class ClienteResource {
 
         for (Cliente cliente : clientes) {
             cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel());
-            cliente.add(
-                    linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withRel(IanaLinkRelations.COLLECTION));
+            cliente.add(linkTo(methodOn(ClienteResource.class).atualizarEnderecoDoCliente(cliente.getId(),null)).withRel("endereço"));
+            cliente.add(linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withRel(IanaLinkRelations.COLLECTION));
         }
 
         CollectionModel<Cliente> collectionModel = CollectionModel.of(clientes);
@@ -58,6 +58,7 @@ public class ClienteResource {
         cliente = clienteService.findById(id);
 
         cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel());
+        cliente.add(linkTo(methodOn(ClienteResource.class).atualizarEnderecoDoCliente(cliente.getId(),null)).withRel("endereço"));
         cliente.add(linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withRel(IanaLinkRelations.COLLECTION));
 
         return ResponseEntity.ok(cliente);
@@ -73,6 +74,7 @@ public class ClienteResource {
         clienteService.update(cliente);
 
         cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel());
+        cliente.add(linkTo(methodOn(ClienteResource.class).atualizarEnderecoDoCliente(cliente.getId(),null)).withRel("endereço"));
         cliente.add(linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withRel(IanaLinkRelations.COLLECTION));
 
         return ResponseEntity.ok(cliente);

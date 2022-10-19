@@ -15,7 +15,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-public class Cliente extends RepresentationModel {
+public class Cliente implements  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
