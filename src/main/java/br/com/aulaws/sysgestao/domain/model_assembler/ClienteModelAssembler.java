@@ -2,7 +2,6 @@ package br.com.aulaws.sysgestao.domain.model_assembler;
 
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
-import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -24,6 +23,4 @@ public class ClienteModelAssembler implements RepresentationModelAssembler<Clien
 
         return entityModelCliente;
     }
-
-
 }

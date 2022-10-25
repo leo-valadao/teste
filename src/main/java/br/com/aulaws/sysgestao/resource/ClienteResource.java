@@ -1,10 +1,12 @@
 package br.com.aulaws.sysgestao.resource;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.aulaws.sysgestao.domain.Cliente;
 import br.com.aulaws.sysgestao.domain.Endereco;
+import br.com.aulaws.sysgestao.domain.model_assembler.ClienteModelAssembler;
 import br.com.aulaws.sysgestao.service.ClienteService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -33,35 +36,39 @@ public class ClienteResource {
     @Autowired
     private ClienteService clienteService;
 
+    @Autowired
+    private ClienteModelAssembler clienteModelAssembler;
+
     @GetMapping
-    public ResponseEntity<CollectionModel<Cliente>> obterTodosClientes() {
+    public ResponseEntity<List<EntityModel<Cliente>>> obterTodosClientes() {
         List<Cliente> clientes = clienteService.findAll();
         if (clientes.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
 
-        for (Cliente cliente : clientes) {
-            cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel());
-            cliente.add(linkTo(methodOn(ClienteResource.class).atualizarEnderecoDoCliente(cliente.getId(),null)).withRel("endereço"));
-            cliente.add(linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withRel(IanaLinkRelations.COLLECTION));
-        }
+        List<EntityModel<Cliente>> listaEntityModelCliente = new ArrayList<>();
 
-        CollectionModel<Cliente> collectionModel = CollectionModel.of(clientes);
-        collectionModel.add(linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withSelfRel());
+        // for (Cliente cliente : clientes) {
+        //     EntityModel<Cliente> entityModelCliente = clienteModelAssembler.toModel(cliente);
+        //     listaEntityModelCliente.add(entityModelCliente);
+        // }
 
-        return ResponseEntity.ok(collectionModel);
+        listaEntityModelCliente.addAll(clientes.stream().map(clienteModelAssembler::toModel).toList());
+
+        CollectionModel<EntityModel<Cliente>> collectionModel;
+        collectionModel = CollectionModel.of(listaEntityModelCliente);
+
+        return ResponseEntity.ok(listaEntityModelCliente);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> obterPorId(@PathVariable("id") Long id) {
+    public ResponseEntity<EntityModel<Cliente>> obterPorId(@PathVariable("id") Long id) {
         Cliente cliente;
         cliente = clienteService.findById(id);
 
-        cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel());
-        cliente.add(linkTo(methodOn(ClienteResource.class).atualizarEnderecoDoCliente(cliente.getId(),null)).withRel("endereço"));
-        cliente.add(linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withRel(IanaLinkRelations.COLLECTION));
+        EntityModel<Cliente> entityModelCliente = clienteModelAssembler.toModel(cliente);
 
-        return ResponseEntity.ok(cliente);
+        return ResponseEntity.ok(entityModelCliente);
     }
 
     // Método HTTP PUT serve para atualizar um objeto/recurso já existente;
@@ -69,15 +76,13 @@ public class ClienteResource {
     // PQ se não existir, o método ele vai gravar/criar um novo recurso ==> HTTP
     // POST
     @PutMapping
-    public ResponseEntity<Cliente> atualizarCliente(@RequestBody Cliente cliente) {
+    public ResponseEntity<EntityModel<Cliente>> atualizarCliente(@RequestBody Cliente cliente) {
         clienteService.findById(cliente.getId());
         clienteService.update(cliente);
 
-        cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel());
-        cliente.add(linkTo(methodOn(ClienteResource.class).atualizarEnderecoDoCliente(cliente.getId(),null)).withRel("endereço"));
-        cliente.add(linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withRel(IanaLinkRelations.COLLECTION));
+        EntityModel<Cliente> entityModelCliente = clienteModelAssembler.toModel(cliente);
 
-        return ResponseEntity.ok(cliente);
+        return ResponseEntity.ok(entityModelCliente);
     }
 
     @DeleteMapping("/{id}")
@@ -87,21 +92,20 @@ public class ClienteResource {
     }
 
     @PostMapping
-    public ResponseEntity<Cliente> saveCliente(@RequestBody @Valid Cliente cliente, HttpServletRequest request) {
+    public ResponseEntity<EntityModel<Cliente>> saveCliente(@RequestBody @Valid Cliente cliente, HttpServletRequest request) {
 
         clienteService.save(cliente);
 
         URI uri = linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel().toUri();
-        cliente.add(linkTo(methodOn(ClienteResource.class).obterPorId(cliente.getId())).withSelfRel());
-        cliente.add(linkTo(methodOn(ClienteResource.class).atualizarEnderecoDoCliente(cliente.getId(),null)).withRel("endereço"));
-        cliente.add(linkTo(methodOn(ClienteResource.class).obterTodosClientes()).withRel(IanaLinkRelations.COLLECTION));
+        EntityModel<Cliente> entityModelCliente = clienteModelAssembler.toModel(cliente);
 
-        return ResponseEntity.created(uri).body(cliente);
+        return ResponseEntity.created(uri).body(entityModelCliente);
     }
 
     @PatchMapping("/{id}/endereco")
-    public ResponseEntity<Cliente> atualizarEnderecoDoCliente(@PathVariable("id") Long idCliente, Endereco endereco) {
-        clienteService.updatePartial(idCliente, endereco);
-        return ResponseEntity.ok(clienteService.updatePartial(idCliente, endereco));
+    public ResponseEntity<EntityModel<Cliente>> atualizarEnderecoDoCliente(@PathVariable("id") Long idCliente, Endereco endereco) {
+        Cliente cliente = clienteService.updatePartial(idCliente, endereco);
+        EntityModel<Cliente> entityModelCliente = clienteModelAssembler.toModel(cliente);
+        return ResponseEntity.ok(entityModelCliente);
     }
 }

@@ -2,7 +2,6 @@ package br.com.aulaws.sysgestao.domain;
 
 import org.hibernate.validator.constraints.Range;
 import org.hibernate.validator.constraints.br.CPF;
-import org.springframework.hateoas.RepresentationModel;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -15,7 +14,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-public class Cliente implements  {
+public class Cliente {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
